@@ -1,0 +1,34 @@
+# Additions to the existing `climate` environment.
+#
+#   conda env update -n climate -f environment.yml
+#
+# This deliberately does NOT create a new environment. `climate` is the
+# environment for climate and EO work on this machine; it already carries
+# numpy, xarray, dask, netCDF4, cartopy, shapely, matplotlib, PIL, requests,
+# pyyaml, tqdm, rich and jupyterlab, so only the satellite-specific stack is
+# listed here.
+#
+# Verified by dry run against climate on 2026-09-06: 39 packages installed,
+# nothing upgraded, downgraded or removed.
+name: climate
+channels:
+  - conda-forge
+dependencies:
+  # --- Satellite reading / compositing / reprojection ---
+  - satpy>=0.60            # ahi_hsd reader + true_color / ash / dust composites
+  - pyresample>=1.35       # AreaDefinition + resampling to a lat/lon grid
+  - pyspectral             # Rayleigh correction + solar geometry for true colour
+  - pyorbital              # solar zenith angle, used for the day/night gate
+  - trollimage             # the enhancement stretches satpy's writers apply
+
+  # --- IO ---
+  - h5py                   # pyspectral's atmospheric correction LUTs
+  - bottleneck             # faster reductions under xarray
+
+  # --- Animation ---
+  - imageio
+  - imageio-ffmpeg         # bundles ffmpeg, gives H.264 MP4 output
+
+  # --- Plumbing ---
+  - python-dotenv          # reads P-Tree credentials out of .env
+  - pooch                  # how pyspectral/satpy fetch their auxiliary data

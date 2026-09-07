@@ -1,0 +1,134 @@
+# Himawari pipeline configuration.
+#
+# This file is the whole interface. Point it at a different time window, a
+# different region, a different satellite or a different set of composites and
+# the three notebooks follow, with no code change.
+#
+# The values below reproduce the worked example in the README: the Anak
+# Krakatau eruption of 4-6 September 2026. A second, quite different example
+# is given at the bottom of the file.
+
+# The point of interest marked on every frame, and the clock used for labels.
+# Delete this block entirely for unmarked frames on a UTC clock.
+event:
+  name: Anak Krakatau
+  lon: 105.423
+  lat: -6.102
+  timezone_offset_hours: 7
+  timezone_label: WIB
+
+# All times UTC. 2026-09-03 17:00 UTC is 2026-09-04 00:00 WIB, so this window
+# is "4 to 7 September, Indonesian local time".
+window:
+  start_utc: 2026-09-03 17:00
+  end_utc:   2026-09-06 17:00
+  step_minutes: 10          # must be a multiple of 10; AHI's full-disk cadence
+
+source:
+  # aws   - public NOAA mirror, no credentials, parallel HTTPS
+  # ptree - ftp.ptree.jaxa.jp, needs P_TREE_USER / P_TREE_PASS in .env
+  backend: aws
+  # H09 covers 2022-11 to now; H08 covers 2015-07-07 to 2022-12-13.
+  satellite: H09
+  workers: 24
+
+paths:
+  # Deliberately outside the repo and outside any cloud-synced folder: this
+  # holds tens of gigabytes of .bz2 that should never be synced or committed.
+  cache_dir: C:/himawari_cache
+  frames_dir: frames
+  output_dir: output
+  temp_dir: temp
+
+# Extra output grids, merged over the built-ins in himawari.render.GRIDS
+# (regional, regional_hires, wide, zoom). A name defined here wins.
+#
+# grids:
+#   my_area:
+#     extent: [lon_min, lat_min, lon_max, lat_max]
+#     resolution: 0.02        # degrees per pixel; 0.02 ~ 2 km, 0.005 ~ 0.5 km
+#     label: "Something descriptive"
+
+# Which composites to render, and on which grid.
+#
+#   ash                  volcanic ash; works day and night
+#   dust                 same four channels, stretch favouring dust and SO2
+#   night_microphysics   cloud phase and plume top at night
+#   volcanic_emissions   SO2 RGB, added by config/satpy
+#   true_color           daylight only, sharpened to 0.5 km
+#   true_color_reproduction   JMA's own colour rendering
+#   natural_color, cloudtop, B13, B08
+products:
+  - composite: ash
+    grid: regional
+  - composite: dust
+    grid: regional
+  - composite: night_microphysics
+    grid: regional
+  - composite: volcanic_emissions
+    grid: regional
+  - composite: true_color
+    grid: regional_hires
+
+  # Continuous day-and-night products. Both were added after the first run;
+  # they render into their own folders, so earlier output is untouched.
+  #
+  # B13 is the clean infrared window as plain greyscale: the classic satellite
+  # cloud picture, identical in daylight and darkness.
+  - composite: B13
+    grid: regional
+  # True colour that fades into the ash RGB across the terminator, so a single
+  # animation runs through sunset without going black. Swap the composite for
+  # true_color_night_ir (greyscale IR at night) or
+  # true_color_night_microphysics, or move it to regional_hires for 0.5 km at
+  # roughly six times the render cost.
+  - composite: true_color_night_ash
+    grid: regional
+
+render:
+  # Parallel timeslots, as separate processes. Each holds a whole scene, so
+  # this trades memory for wall clock; 0.5 km true colour is the high-water mark.
+  workers: 6
+  # Skip reflective-band composites when the whole grid is in darkness.
+  skip_dark: true
+
+animation:
+  # 6 fps against a 10-minute cadence is exactly one hour of real time per
+  # second of video. Slow enough to follow a single pulse leaving the vent,
+  # and a round number to quote in a caption.
+  fps: 6
+  mp4_max_width: 1920
+  gif_max_width: 900
+  gif_fps: 10
+
+# ---------------------------------------------------------------------------
+# A different event entirely, to show nothing here is Krakatau-specific.
+# Hunga Tonga-Hunga Ha'apai, 15 January 2022, observed by Himawari-8:
+#
+# event:
+#   name: Hunga Tonga-Hunga Ha'apai
+#   lon: -175.38
+#   lat: -20.54
+#   timezone_offset_hours: 13
+#   timezone_label: TOT
+#
+# window:
+#   start_utc: 2022-01-15 03:00
+#   end_utc:   2022-01-15 09:00
+#   step_minutes: 10
+#
+# source:
+#   backend: aws
+#   satellite: H08          # H09 did not exist yet
+#
+# grids:
+#   tonga:
+#     extent: [-180.0, -30.0, -165.0, -12.0]
+#     resolution: 0.02
+#     label: "Hunga Tonga and the southwest Pacific"
+#
+# products:
+#   - composite: ash
+#     grid: tonga
+#   - composite: B13
+#     grid: tonga

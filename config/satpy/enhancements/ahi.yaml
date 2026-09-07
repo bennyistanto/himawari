@@ -1,0 +1,22 @@
+# Stretches for the locally defined AHI composites.
+#
+# Enhancements are looked up by (sensor, standard_name), and satpy only reads
+# the enhancement files for the sensor actually in the scene. That is why
+# porting the ABI SO2 composite is not enough on its own: without this file the
+# AHI version would fall through to a default linear stretch and look nothing
+# like the reference product.
+
+enhancements:
+
+  volcanic_emissions:
+    # Identical limits to satpy's ABI and FCI entries, which both follow the
+    # CIRA quick guide: R and G are brightness-temperature differences in K,
+    # B is a brightness temperature in K.
+    standard_name: volcanic_emissions
+    operations:
+      - name: stretch
+        method: !!python/name:satpy.enhancements.contrast.stretch
+        kwargs:
+          stretch: crude
+          min_stretch: [-4.0, -4.0, 243.0]
+          max_stretch: [ 2.0,  5.0, 303.0]

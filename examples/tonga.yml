@@ -1,0 +1,58 @@
+# Second worked example: Hunga Tonga-Hunga Ha'apai, 15 January 2022.
+#
+# A different volcano, a different hemisphere, a different satellite and a
+# different local timezone, with no code changed. Run any notebook against it
+# with:
+#
+#     cfg = project.load(ROOT / "examples" / "tonga.yml")
+#
+# The eruption was observed by Himawari-8, which was the operational satellite
+# until 13 December 2022. Coordinates from Wright et al. (2022), Nature 609.
+
+event:
+  name: Hunga Tonga-Hunga Ha'apai
+  lon: -175.38
+  lat: -20.54
+  timezone_offset_hours: 13
+  timezone_label: TOT
+
+window:
+  start_utc: 2022-01-15 03:40
+  end_utc:   2022-01-15 06:00
+  step_minutes: 10
+
+source:
+  backend: aws
+  satellite: H08
+  workers: 24
+
+paths:
+  cache_dir: C:/himawari_cache
+  # Its own resample cache. The lookup is keyed on geometry alone, so an entry
+  # written before a resampler fix would keep reproducing the old result; a
+  # separate directory also keeps concurrent runs from writing into each other.
+  resample_cache: C:/himawari_cache/_resample_tonga
+  frames_dir: frames_tonga
+  output_dir: output
+  temp_dir: temp
+
+grids:
+  tonga:
+    extent: [-180.0, -30.0, -165.0, -12.0]
+    resolution: 0.02
+    label: "Hunga Tonga and the southwest Pacific"
+
+products:
+  - composite: ash
+    grid: tonga
+  - composite: B13
+    grid: tonga
+
+render:
+  workers: 4
+  skip_dark: true
+
+animation:
+  fps: 6
+  gif_max_width: 800
+  gif_fps: 6

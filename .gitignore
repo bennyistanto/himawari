@@ -1,0 +1,68 @@
+# What belongs in this repository: the pipeline, the notebooks, the config,
+# the audit scripts. Everything else here is either downloaded, generated, or
+# borrowed, and all of it can be rebuilt from what is tracked.
+
+# --- Satellite data ---------------------------------------------------------
+# The HSD cache normally lives outside the repo (paths.cache_dir in config.yml
+# defaults to C:/himawari_cache), but ignore it here too in case someone points
+# it inside. A three-day run is ~78 GB.
+himawari_cache/
+*.DAT
+*.DAT.bz2
+*.part
+
+# --- Generated output -------------------------------------------------------
+# frames/ reached 6.8 GB for one three-day run; output/ holds the encoded video.
+# The glob matters: examples/tonga.yml writes to frames_tonga/, and any other
+# run pointed at frames_<name>/ would otherwise be committed as loose PNGs.
+frames/
+frames_*/
+output/
+output_*/
+temp/
+
+# --- Third-party reference code --------------------------------------------
+# Clones of other people's repositories, kept locally for reading. They have
+# their own upstreams and their own licences; they are not ours to redistribute.
+references/
+
+# --- Credentials ------------------------------------------------------------
+.env
+
+# --- Notebooks --------------------------------------------------------------
+# Executed notebooks embed their output images as base64 and grow enormous:
+# 02_process.ipynb is ~42 MB after a full run against ~15 KB of actual source.
+# Strip outputs before committing:  python tools/nbstrip.py notebook/*.ipynb
+.ipynb_checkpoints/
+*-checkpoint.ipynb
+
+# --- Python -----------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+env/
+.pytest_cache/
+.ruff_cache/
+
+# --- Editors and OS ---------------------------------------------------------
+.idea/
+.vscode/
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# --- Content Support ---------------------------------------------------------
+blog/
+audit/
+tools/
+#docs/
+
+# --- One-off maintenance ----------------------------------------------------
+# Re-renders every product in place. It existed to restamp frames produced
+# before the observation-time fix; a first run already writes correct
+# timestamps, so a new user has no use for it.
+examples/rerender_all.py
+
+# --- CLAUDE ----------------------------------------------------
+HANDOFF.md

@@ -1,0 +1,134 @@
+# Local additions to satpy's built-in AHI composites.
+#
+# Satpy merges every composites/ahi.yaml it finds along SATPY_CONFIG_PATH, so
+# this file adds to the shipped set rather than replacing it. Point satpy here
+# with:
+#
+#     satpy.config.set(config_path=[".../config/satpy"])
+#
+# (himawari.render.use_local_config() does that for you.)
+
+sensor_name: visir/ahi
+
+composites:
+
+  # SO2 / Volcanic Emissions RGB. Satpy ships this for ABI and FCI but not for
+  # AHI, so it is transcribed here from the CIRA quick guide using the AHI
+  # channels that match the ABI ones one for one:
+  #
+  #   R = 6.9 um - 7.3 um   (ABI C09 - C10  ->  AHI B09 - B10)
+  #   G = 10.4 um - 8.6 um  (ABI C13 - C11  ->  AHI B13 - B11)
+  #   B = 10.4 um           (ABI C13        ->  AHI B13)
+  #
+  # SO2 shows up yellow-green against the grey background; ash is a distinctly
+  # redder brown, which is what makes this worth having alongside the ash RGB
+  # for a volcanic plume.
+  # https://rammb.cira.colostate.edu/training/visit/quick_guides/Quick_Guide_SO2_RGB.pdf
+  volcanic_emissions:
+    description: >
+      Volcanic Emissions (SO2 and ash) RGB, CIRA recipe ported to AHI.
+    references:
+      CIRA Quick Guide: https://rammb.cira.colostate.edu/training/visit/quick_guides/Quick_Guide_SO2_RGB.pdf
+    compositor: !!python/name:satpy.composites.core.GenericCompositor
+    prerequisites:
+      - compositor: !!python/name:satpy.composites.arithmetic.DifferenceCompositor
+        prerequisites:
+          - name: B09
+          - name: B10
+      - compositor: !!python/name:satpy.composites.arithmetic.DifferenceCompositor
+        prerequisites:
+          - name: B13
+          - name: B11
+      - name: B13
+    standard_name: volcanic_emissions
+
+  # Alias, so `so2` works the way it does for ABI users.
+  so2:
+    compositor: !!python/name:satpy.composites.core.GenericCompositor
+    prerequisites:
+      - compositor: !!python/name:satpy.composites.arithmetic.DifferenceCompositor
+        prerequisites:
+          - name: B09
+          - name: B10
+      - compositor: !!python/name:satpy.composites.arithmetic.DifferenceCompositor
+        prerequisites:
+          - name: B13
+          - name: B11
+      - name: B13
+    standard_name: volcanic_emissions
+
+  # --- Demonstration composites for the blog post ------------------------
+  #
+  # These two differ in exactly one channel: the green. Both are plain
+  # GenericCompositors with the same standard_name, so the same enhancement
+  # is applied to both and any visible difference is the green band alone.
+  # Satpy's real `true_color` additionally sharpens with the 0.5 km red, which
+  # would confound the comparison, so it is not used here.
+
+  # Green taken straight from B02 at 0.51 um, as the instrument measures it.
+  demo_green_native:
+    compositor: !!python/name:satpy.composites.core.GenericCompositor
+    prerequisites:
+      - name: B03
+        modifiers: [sunz_corrected, rayleigh_corrected]
+      - name: B02
+        modifiers: [sunz_corrected, rayleigh_corrected]
+      - name: B01
+        modifiers: [sunz_corrected, rayleigh_corrected]
+    standard_name: true_color
+
+  # Green replaced by Miller et al. (2016) hybrid green, which mixes 15% of
+  # the 0.86 um vegetation band into the native 0.51 um green.
+  demo_green_hybrid:
+    compositor: !!python/name:satpy.composites.core.GenericCompositor
+    prerequisites:
+      - name: B03
+        modifiers: [sunz_corrected, rayleigh_corrected]
+      - name: hybrid_green
+      - name: B01
+        modifiers: [sunz_corrected, rayleigh_corrected]
+    standard_name: true_color
+
+  # --- Day/night blends without an external dependency ---------------------
+  #
+  # Satpy's own `true_color_with_night_ir` blends in `night_ir_with_background`,
+  # which pulls a global NASA Black Marble city-lights GeoTIFF through pooch.
+  # That download currently fails a pinned SHA256 check because NEO reissued
+  # the file, and it is several hundred megabytes even when it works. These
+  # blends use products already computed from the bands we hold, so they need
+  # no network and no static imagery.
+  #
+  # A DayNightCompositor fades between the two inputs on solar zenith angle:
+  # fully the day product below lim_low, fully the night product above
+  # lim_high, linearly mixed between. 85 to 88 degrees puts the transition in
+  # civil twilight, which is where the eye expects it.
+
+  # Night side: the clean IR window as classic greyscale cloud imagery.
+  true_color_night_ir:
+    compositor: !!python/name:satpy.composites.fill.DayNightCompositor
+    standard_name: true_color_with_night_ir
+    lim_low: 85.0
+    lim_high: 88.0
+    prerequisites:
+      - true_color
+      - name: B13
+
+  # Night side: the ash RGB, so a volcanic plume stays legible after dark.
+  true_color_night_ash:
+    compositor: !!python/name:satpy.composites.fill.DayNightCompositor
+    standard_name: true_color_with_night_ir
+    lim_low: 85.0
+    lim_high: 88.0
+    prerequisites:
+      - true_color
+      - ash
+
+  # Night side: night microphysics, which separates cloud phase and plume top.
+  true_color_night_microphysics:
+    compositor: !!python/name:satpy.composites.fill.DayNightCompositor
+    standard_name: true_color_with_night_ir
+    lim_low: 85.0
+    lim_high: 88.0
+    prerequisites:
+      - true_color
+      - night_microphysics
