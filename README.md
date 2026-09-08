@@ -222,6 +222,62 @@ rather than quietly producing frames from the wrong channels.
 
 ---
 
+## Gallery
+
+One frame per product, in [`gallery/`](gallery). Each was chosen by a stated
+rule rather than by eye, so the selection is reproducible: `python
+blog/pick_gallery.py` regenerates all of them.
+
+### The day/night blend, mid-dissolve
+
+The terminator runs vertically through this frame. True colour on the lit
+western side, ash RGB on the dark east, the plume legible in both. Chosen as
+the slot whose solar zenith at the vent is nearest 86.5 degrees, the middle of
+the blend's transition band.
+
+![true colour dissolving into ash RGB across the terminator](gallery/true_color_night_ash_twilight_20260905_1040.png)
+
+### Anak Krakatau, 4 to 6 September 2026
+
+| | |
+|---|---|
+| ![true colour](gallery/true_color_daylight_20260905_0710.png) **True colour**, 14:10 WIB. Solar zenith nearest 35 degrees, so the best illumination while the plume was still well developed. | ![volcanic emissions RGB](gallery/volcanic_emissions_daylight_20260905_0710.png) **Volcanic emissions RGB**, same moment. The SO2 plume reads bright against everything else. |
+| ![ash RGB](gallery/ash_peak_20260904_1850.png) **Ash RGB** at the peak, 01:50 WIB. The coldest pixel of the whole three days, 202.5 K, and it is the middle of the night. | ![dust RGB](gallery/dust_peak_20260904_1850.png) **Dust RGB**, same moment. Identical four channels to the ash product, different stretch. |
+| ![night microphysics](gallery/night_microphysics_night_20260904_1900.png) **Night microphysics**, 02:00 WIB. Solar zenith 149 degrees: no sunlight reaches this scene at all. | ![band 13](gallery/B13_onset_20260904_1620.png) **Band 13, 10.4 um** at onset, 23:20 WIB on 4 September. The first slot to cross the detection threshold, at 261.6 K. |
+
+### Hunga Tonga-Hunga Ha'apai, 15 January 2022
+
+A different volcano, hemisphere and satellite, produced by the same pipeline
+from `examples/tonga.yml` with no code changes. Both frames are the coldest
+slot of that window, 179.4 K, which is the climactic umbrella cloud.
+
+| | |
+|---|---|
+| ![Tonga ash RGB](gallery/tonga_ash_peak_20220115_0420.png) **Ash RGB**, 04:20 UTC, Himawari-8. | ![Tonga band 13](gallery/tonga_B13_peak_20220115_0420.png) **Band 13**, same moment. |
+
+### How the picks were made
+
+| Rule | Meaning |
+|---|---|
+| `onset` | first slot whose coldest band-13 pixel near the vent crosses the detection threshold |
+| `peak` | slot with the coldest pixel anywhere in the window |
+| `daylight` | solar zenith at the vent nearest 35 degrees |
+| `night` | solar zenith nearest 150 degrees |
+| `twilight` | solar zenith nearest 86.5 degrees |
+
+The illuminated picks are bounded to within 20 hours of the peak. Without that
+bound, "nearest to 35 degrees" is satisfied equally well by any morning in the
+window, including one two days after the plume had dispersed.
+
+`onset` defers to `blog/eruption_onset.py` rather than being re-derived here.
+Setting the background across all three days gives a slacker threshold, 285.7 K
+against 281.3 K, which fires on ordinary cold cloud a full day early.
+
+Frames are downscaled to 1600 px for the repository. The originals run to
+5000 px and 24 MB each, and `frames/` is not tracked.
+
+---
+
 ## Known limitations
 
 - **Parallax is not corrected.** A plume top 15 km up, viewed at Krakatau's
@@ -257,6 +313,8 @@ src/himawari/
 examples/
   tonga.yml               a second event, satellite and hemisphere
   run_tonga.py            runs the whole pipeline against it end to end
+gallery/                  one frame per product, picked by measurement
+docs/hero.png             the banner at the top of this file
 ```
 
 Downloads, frames, encoded video and scratch output all live outside version
