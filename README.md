@@ -9,7 +9,7 @@ Anything older has to come from the archive as Himawari Standard Data, which is
 instrument-geometry, per-band, per-segment, and not directly viewable. This
 repository does the whole path from there to an MP4.
 
-![Anak Krakatau, 5 September 2026, Himawari-9 true colour](docs/hero.png)
+![Anak Krakatau, 5 September 2026, Himawari-9 true colour](gallery/hero.png)
 
 The worked example throughout is the **Anak Krakatau eruption of 4 to 6
 September 2026**, written up in
@@ -225,8 +225,8 @@ rather than quietly producing frames from the wrong channels.
 ## Gallery
 
 One frame per product, in [`gallery/`](gallery). Each was chosen by a stated
-rule rather than by eye, so the selection is reproducible: `python
-blog/pick_gallery.py` regenerates all of them.
+rule rather than by eye, so the selection can be checked rather than taken on
+trust. The rules are at the bottom of this section.
 
 ### The day/night blend, mid-dissolve
 
@@ -248,12 +248,30 @@ the blend's transition band.
 ### Hunga Tonga-Hunga Ha'apai, 15 January 2022
 
 A different volcano, hemisphere and satellite, produced by the same pipeline
-from `examples/tonga.yml` with no code changes. Both frames are the coldest
-slot of that window, 179.4 K, which is the climactic umbrella cloud.
+from `examples/tonga.yml` with no code changes. Two moments, because the
+eruption's most intense and most spread-out states are three hours apart.
+
+**04:20 UTC, the climactic column.** The coldest pixel of the window at 179.4 K,
+which is the highest and most vigorous the plume gets.
 
 | | |
 |---|---|
-| ![Tonga ash RGB](gallery/tonga_ash_peak_20220115_0420.png) **Ash RGB**, 04:20 UTC, Himawari-8. | ![Tonga band 13](gallery/tonga_B13_peak_20220115_0420.png) **Band 13**, same moment. |
+| ![Tonga ash RGB at the peak](gallery/tonga_ash_peak_20220115_0420.png) **Ash RGB** | ![Tonga band 13 at the peak](gallery/tonga_B13_peak_20220115_0420.png) **Band 13, 10.4 um** |
+
+**06:00 UTC, the umbrella dispersed.** The same cloud after spreading for
+another hour and three quarters, thinner and broader.
+
+| | |
+|---|---|
+| ![Tonga ash RGB dispersed](gallery/tonga_ash_dispersed_20220115_0600.png) **Ash RGB** | ![Tonga band 13 dispersed](gallery/tonga_B13_dispersed_20220115_0600.png) **Band 13, 10.4 um** |
+
+This second pair is chosen visually, not by measurement, and the distinction is
+worth stating. Detected ash area actually *peaks* at 04:50 (49 thousand km2 with
+BT(11.2) minus BT(12.4) below zero, the Prata reverse-absorption test) and is
+down to 30 thousand by 06:00. As an umbrella spreads it also thins, so it falls
+out of a fixed detection threshold while still covering more sky to the eye.
+The frame that reads as the widest is not the one with the largest measured
+signature, and neither is wrong: they answer different questions.
 
 ### How the picks were made
 
@@ -269,9 +287,10 @@ The illuminated picks are bounded to within 20 hours of the peak. Without that
 bound, "nearest to 35 degrees" is satisfied equally well by any morning in the
 window, including one two days after the plume had dispersed.
 
-`onset` defers to `blog/eruption_onset.py` rather than being re-derived here.
-Setting the background across all three days gives a slacker threshold, 285.7 K
-against 281.3 K, which fires on ordinary cold cloud a full day early.
+`onset` uses the threshold established over the eight quiet hours immediately
+before the eruption. Setting the background across all three days instead gives
+a slacker threshold, 285.7 K against 281.3 K, which fires on ordinary cold
+cloud a full day early.
 
 Frames are downscaled to 1600 px for the repository. The originals run to
 5000 px and 24 MB each, and `frames/` is not tracked.
@@ -313,8 +332,8 @@ src/himawari/
 examples/
   tonga.yml               a second event, satellite and hemisphere
   run_tonga.py            runs the whole pipeline against it end to end
-gallery/                  one frame per product, picked by measurement
-docs/hero.png             the banner at the top of this file
+gallery/                  one frame per product, picked by measurement,
+                          plus the banner at the top of this file
 ```
 
 Downloads, frames, encoded video and scratch output all live outside version
