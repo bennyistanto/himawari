@@ -127,17 +127,27 @@ Some entries are less obvious than they look:
 """
 
 
+def requirements_for(name: str) -> list[str]:
+    """Bands one product needs.
+
+    A bare band name is its own requirement, so any of the 16 can be used as a
+    single-band greyscale product without an entry in the table.
+    """
+    if name in COMPOSITE_REQUIREMENTS:
+        return COMPOSITE_REQUIREMENTS[name]
+    if name in RESOLUTION_CODE:
+        return [name]
+    raise KeyError(
+        f"unknown composite {name!r}; known composites: "
+        f"{sorted(COMPOSITE_REQUIREMENTS)}, or any band B01..B16"
+    )
+
+
 def bands_for(composites: Sequence[str]) -> list[str]:
     """Union of the bands a set of composites needs, sorted."""
     need: set[str] = set()
     for name in composites:
-        try:
-            need.update(COMPOSITE_REQUIREMENTS[name])
-        except KeyError:
-            raise KeyError(
-                f"unknown composite {name!r}; known: "
-                f"{sorted(COMPOSITE_REQUIREMENTS)}"
-            ) from None
+        need.update(requirements_for(name))
     return sorted(need)
 
 

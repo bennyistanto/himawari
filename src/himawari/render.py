@@ -38,6 +38,7 @@ from .catalog import (
     COMPOSITE_REQUIREMENTS,
     SUBSAT_LON,
     geos_line_col,
+    requirements_for,
     scene_dir,
     segment_of_line,
 )
@@ -149,7 +150,7 @@ def load_scene(
 
     needed: set[str] = set()
     for name in composites:
-        needed.update(COMPOSITE_REQUIREMENTS.get(name, []))
+        needed.update(requirements_for(name))
 
     files = scene_files(cache_dir, when, needed or None)
     if not files:
