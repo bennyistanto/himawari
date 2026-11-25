@@ -35,7 +35,7 @@ source:
 paths:
   # Deliberately outside the repo and outside any cloud-synced folder: this
   # holds tens of gigabytes of .bz2 that should never be synced or committed.
-  cache_dir: C:/himawari_cache
+  cache_dir: E:/temp/himawari_cache
   frames_dir: frames
   output_dir: output
   temp_dir: temp

@@ -174,6 +174,38 @@ it.
 
 ---
 
+## Playback
+
+Two things stand between a folder of PNGs and an animation that reads well.
+
+**Gaps.** AHI pauses at 02:40 and 14:40 UTC, and a daylight-only composite has
+nothing at night. Dropped, a gap silently speeds the clock up and the plume
+teleports. `animate.fill_gaps` bridges one instead: short gaps are blended
+between the frames either side, long ones repeat the previous frame, which
+reads as a pause and is the honest depiction of absent data. A gap straddling
+sunrise is never blended, because for a day/night product the two ends are
+different composites. Nothing synthesised is written to disk, so `frames/`
+stays one PNG per real observation.
+
+**Cadence.** Ten minutes is a flicker on a plume moving several pixels a step.
+`to_mp4(..., interpolate="minterpolate")` synthesises a frame between every
+pair, giving an effective five-minute step. It runs as an encoder filter and
+leaves the duration alone, so the real-time-per-second rate set by `fps` stays
+true no matter how many frames fill it.
+
+Motion compensation rather than averaging the two neighbours, and the
+difference was measured rather than assumed: withholding every second real
+frame from a twelve-hour run over the Krakatau onset and reconstructing it,
+motion compensation scored **17.8% better RMSE** over the moving quarter of
+the frame. Averaging in turn beat repeating the previous frame by 26.8%.
+Averaging smears the dark core at the vent into two half-bright copies; motion
+compensation keeps it compact.
+
+Interpolated frames are synthesised, not observed. They carry no information
+beyond what the two real frames either side already hold.
+
+---
+
 ## What it costs
 
 Measured on the worked example: three days, 10-minute cadence, a 25 x 14 degree
@@ -327,7 +359,7 @@ src/himawari/
   catalog.py              filenames, AWS/P-Tree paths, timeslots, segment geometry
   fetch.py                AwsBackend / PTreeBackend, parallel resumable download
   render.py               grids, Scene loading, resampling, composites, annotation
-  animate.py              gap filling, MP4, GIF, side-by-side panels
+  animate.py              gap filling, interpolation, MP4, GIF, panels
   project.py              reads config.yml, derives bands and segments from it
 examples/
   tonga.yml               a second event, satellite and hemisphere

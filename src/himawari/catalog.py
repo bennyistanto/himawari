@@ -103,6 +103,13 @@ COMPOSITE_REQUIREMENTS: dict[str, list[str]] = {
     "true_color_night_microphysics":
         ["B01", "B02", "B03", "B04", "B07", "B13", "B14", "B15"],
 
+    # Green-band demonstrations, defined locally in config/satpy. The hybrid
+    # needs B04 because Miller et al.'s hybrid green mixes in 0.86 um, which
+    # satpy states by wavelength rather than by band name - resolved with
+    # render.required_bands rather than read off the recipe.
+    "demo_green_native": ["B01", "B02", "B03"],
+    "demo_green_hybrid": ["B01", "B02", "B03", "B04"],
+
     # Single bands, rendered as greyscale.
     "B13": ["B13"],   # 10.4 um clean IR window: the workhorse, day and night
     "B08": ["B08"],   # 6.2 um upper water vapour
